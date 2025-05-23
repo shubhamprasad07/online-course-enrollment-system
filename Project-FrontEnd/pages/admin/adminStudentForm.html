@@ -1,0 +1,226 @@
+<!-- Breadcrumb -->
+<ol class="breadcrumb" style="background-color: #ecf0f1;">
+  <li class="breadcrumb-item"><a href="#" onclick="loadPage('pages/admin/adminDashboard.html')">Dashboard</a></li>
+  <li class="breadcrumb-item active">Students</li>
+</ol>
+
+<div class="container mt-4">
+  <h2>Manage Students</h2>
+
+  <!-- Add Student Form -->
+  <form id="studentForm" class="mb-3" novalidate>
+    <fieldset>
+
+      <div>
+        <label for="studentName" class="form-label mt-3">Full Name</label>
+        <input type="text" class="form-control" id="studentName" required>
+        <div class="invalid-feedback">At least 3 characters required.</div>
+      </div>
+
+      <div>
+        <label for="studentEmail" class="form-label mt-3">Email</label>
+        <input type="email" class="form-control" id="studentEmail" required>
+        <div class="invalid-feedback">Please enter a valid email address.</div>
+      </div>
+
+      <div>
+        <label for="studentPassword" class="form-label mt-3">Password</label>
+        <input type="password" class="form-control" id="studentPassword" required>
+        <div class="invalid-feedback">Password must be at least 6 characters.</div>
+      </div>
+
+      <div>
+        <label for="studentPhone" class="form-label mt-3">Phone</label>
+        <input type="tel" class="form-control" id="studentPhone" required>
+        <div class="invalid-feedback">Please enter a valid phone number.</div>
+      </div>
+
+      <button type="submit" class="btn btn-success mt-4">Add Student</button>
+    </fieldset>
+  </form>
+
+  <!-- Student Table -->
+  <table id="studentTable" class="table table-hover mt-3">
+    <thead class="table-dark">
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="studentTableBody"></tbody>
+  </table><br><br>
+
+</div>
+
+<script>
+  (() => {
+    const studentDB = userDB;
+    const studentTableBody = document.getElementById("studentTableBody");
+
+    const studentForm = document.getElementById("studentForm");
+    const studentName = document.getElementById("studentName");
+    const studentEmail = document.getElementById("studentEmail");
+    const studentPassword = document.getElementById("studentPassword");
+    const studentPhone = document.getElementById("studentPhone");
+
+    studentForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      if (!validateInputs()) return;
+
+      const student = {
+        name: studentName.value,
+        email: studentEmail.value,
+        password: studentPassword.value,
+        phone: studentPhone.value,
+        userType: "student"
+      };
+
+      fetch(studentDB, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": getAuthorization()
+        }
+      })
+        .then(res => res.json())
+        .then(data => {
+          const exists = data.some(s => s.email === studentEmail.value);
+          if (exists) {
+            alert("A student with this email already exists.");
+          } else {
+            return fetch(studentDB, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(student)
+            }).then(() => {
+              studentForm.reset();
+              clearValidation();
+              fetchStudents();
+            });
+          }
+        });
+    });
+
+    function fetchStudents() {
+      fetch(studentDB, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": getAuthorization()
+        }
+      })
+        .then(res => res.json())
+        .then(data => {
+          renderTable(data.filter(d => d.userType === "student"));
+        });
+    }
+
+    function renderTable(data) {
+
+      if ($.fn.DataTable.isDataTable('#studentTable')) {
+        $('#studentTable').DataTable().destroy();
+      }
+
+      studentTableBody.innerHTML = "";
+      data.forEach(student => {
+        studentTableBody.innerHTML += `
+          <tr>
+            <td>${student.userID}</td>
+            <td>${student.name}</td>
+            <td>${student.email}</td>
+            <td>${student.phone}</td>
+            <td>
+              <button class="btn btn-danger btn-sm deleteBtn" deleteBtn-id="${student.userID}"><i class="fa-solid fa-trash"></i></button>
+            </td>
+          </tr>
+        `;
+      });
+
+      document.querySelectorAll(".deleteBtn").forEach(d => {
+        d.addEventListener("click", function (e) {
+          e.preventDefault();
+          deleteStudent(d.getAttribute("deleteBtn-id"));
+        });
+      });
+
+      $('#studentTable').DataTable({ responsive: true });
+    }
+
+    function deleteStudent(id) {
+      if (confirm("Are you sure you want to delete this student?")) {
+        fetch(`${studentDB}/${id}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": getAuthorization()
+          }
+        })
+          .then(() => fetchStudents());
+      }
+    }
+
+    function validateInputs() {
+      let isValid = true;
+
+      if (studentName.value.trim().length < 3) {
+        studentName.classList.add("is-invalid");
+        studentName.classList.remove("is-valid");
+        isValid = false;
+      } else {
+        studentName.classList.remove("is-invalid");
+        studentName.classList.add("is-valid");
+      }
+
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailPattern.test(studentEmail.value.trim())) {
+        studentEmail.classList.add("is-invalid");
+        studentEmail.classList.remove("is-valid");
+        isValid = false;
+      } else {
+        studentEmail.classList.remove("is-invalid");
+        studentEmail.classList.add("is-valid");
+      }
+
+      if (studentPassword.value.trim().length < 5) {
+        studentPassword.classList.add("is-invalid");
+        studentPassword.classList.remove("is-valid");
+        isValid = false;
+      } else {
+        studentPassword.classList.remove("is-invalid");
+        studentPassword.classList.add("is-valid");
+      }
+
+      const phonePattern = /^[0-9]{10}$/;
+      if (!phonePattern.test(studentPhone.value.trim())) {
+        studentPhone.classList.add("is-invalid");
+        studentPhone.classList.remove("is-valid");
+        isValid = false;
+      } else {
+        studentPhone.classList.remove("is-invalid");
+        studentPhone.classList.add("is-valid");
+      }
+
+      return isValid;
+    }
+
+    function clearValidation() {
+      [studentName, studentEmail, studentPassword, studentPhone].forEach(field => {
+        field.classList.remove("is-valid", "is-invalid");
+      });
+    }
+
+    [studentName, studentEmail, studentPassword, studentPhone].forEach(input => {
+      input.addEventListener("blur", validateInputs);
+    });
+
+    fetchStudents();
+  })();
+</script>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>

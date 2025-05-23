@@ -1,0 +1,53 @@
+<div class="container mt-5">
+    <h2 class="mb-4">Course Enrollment Report</h2>
+    <table class="table table-bordered">
+      <thead class="table-dark">
+        <tr>
+          <th>Course Title</th>
+          <th>Total Enrolled Students</th>
+        </tr>
+      </thead>
+      <tbody id="reportTableBody">
+        <!-- Report rows will be injected here -->
+      </tbody>
+    </table>
+  </div>
+
+<script>
+
+    function generateCourseEnrollmentReport() {
+      Promise.all([
+        fetch(courseDB).then(res => res.json()),
+        fetch(enrollmentDB).then(res => res.json())
+      ]).then(([courses, enrollments]) => {
+        const enrollmentCountMap = {};
+        enrollments.forEach(e => {
+          enrollmentCountMap[e.CourseID] = (enrollmentCountMap[e.CourseID] || 0) + 1;
+        });
+
+        const report = courses.map(course => ({
+          title: course.Title,
+          totalEnrolled: enrollmentCountMap[course.id] || 0
+        }));
+
+        renderReport(report);
+      });
+    }
+
+    function renderReport(reportData) {
+      const tableBody = document.getElementById("reportTableBody");
+      tableBody.innerHTML = "";
+
+      reportData.forEach(row => {
+        tableBody.innerHTML += `
+          <tr>
+            <td>${row.title}</td>
+            <td>${row.totalEnrolled}</td>
+          </tr>
+        `;
+      });
+    }
+
+    // Generate the report on page load
+    generateCourseEnrollmentReport();
+  </script>

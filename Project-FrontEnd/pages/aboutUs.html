@@ -1,0 +1,35 @@
+<!-- breadcrumb -->
+<ol class="breadcrumb" style="background-color: #ecf0f1;">
+    <li class="breadcrumb-item"><a href="#" onclick="getHome()">Home</a></li>
+    <li class="breadcrumb-item active">About Us</li>
+</ol>
+
+<div class="analytics-panel mt-4 mx-3">
+    <h1><i class="fas fa-users me-2"></i>About Us</h1>
+    <p>Learn more about our team and our mission.</p>
+</div>
+
+<div class="card mx-auto my-4 p-4 shadow" style="max-width: 600px; border-radius: 1rem;">
+    <div class="card-body">
+        <h4 class="card-title mb-4 text-primary"><i class="fa fa-building me-2"></i>Our Mission</h4>
+        <p>Our mission is to provide high-quality education and help individuals achieve their academic goals. We offer a variety of online courses with dedicated instructors who are passionate about teaching.</p>
+        <h4 class="card-title mb-4 text-primary"><i class="fa fa-heart me-2"></i>Our Team</h4>
+        <p>We are a group of dedicated professionals with a shared passion for education and technology. Our team works tirelessly to create an engaging and enriching learning experience for our students.</p>
+    </div>
+</div>
+<script src="js/script.js"></script>
+<script>
+if (user) {
+    const userData = JSON.parse(user);
+    window.getHome = function () {
+        if (userData.UserType === "student") {
+            window.location.href = "/Project/student.html";
+        } else if (userData.UserType === "admin") {
+            window.location.href = "/Project/admin.html";
+        }
+    };
+} else {
+    alert("No user data found. Redirecting to login.");
+    window.location.href = "/Project/login.html";
+}
+</script>

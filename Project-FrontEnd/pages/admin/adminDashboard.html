@@ -1,0 +1,239 @@
+<div id="main-content">
+  <!-- Breadcrumb -->
+  <ol class="breadcrumb" style="background-color: #ecf0f1;">
+    <li class="breadcrumb-item"><a href="#" onclick="loadPage('pages/admin/adminDashboard.html')"
+        class="text-decoration-none">Home</a></li>
+    <li class="breadcrumb-item active">Dashboard</li>
+  </ol>
+
+  <div id="welcome-message" class="alert alert-info mt-4 mx-3" role="alert">
+    Welcome, <strong><span id="student-name">Student</span></strong>! Here's your dashboard overview.
+  </div>
+
+  <!-- Analytics Panel -->
+  <div class="container-fluid px-4">
+    <div class="analytics-panel">
+      <h1><i class="fas fa-chart-line me-2"></i>Analytics Overview</h1>
+      <p>View and analyze your key performance metrics.</p>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div class="dashboard-container">
+      <div class="row" style="justify-content: center;">
+        <div class="col-md-6 col-lg-3 mb-4">
+          <div class="dashboard-card">
+            <h3><i class="fas fa-users me-2"></i>Students</h3>
+            <h2 class="mt-4 display-4" id="student-count"></h2>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-4">
+          <div class="dashboard-card">
+            <h3><i class="fas fa-book me-1"></i>Courses</h3>
+            <h2 class="mt-4 display-4" id="course-count"></h2>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-4">
+          <div class="dashboard-card">
+            <h3><i class="fas fa-chalkboard-teacher me-2"></i>Instructors</h3>
+            <h2 class="mt-4 display-4" id="instructor-count"></h2>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-4">
+          <div class="dashboard-card">
+            <h3><i class="fas fa-chalkboard-teacher me-2"></i>Enrollments</h3>
+            <h2 class="mt-4 display-4" id="enrollment-count"></h2>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-4">
+          <div class="dashboard-card">
+            <h3><i class="fas fa-chalkboard-teacher me-2"></i>Best Seller</h3>
+            <h2 class="mt-4 display-4" id="popular-course"></h2>
+          </div>
+        </div>
+      </div>
+
+      <div id="instructorCourseChart" class="mb-4 chart"></div>
+
+      <div id="studentCourseChart" class="mb-4 chart"></div>
+
+      <div id="studentsPerInstructorChart"></div>
+
+    </div>
+  </div>
+</div>
+<script>
+
+  if (user) {
+    const userData = JSON.parse(user);
+    if (userData && userData.Name) {
+      document.getElementById("student-name").textContent = userData.Name;
+    }
+  }
+
+  function loadDashboardStats() {
+    fetch(`${dashboardDB}/card`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": getAuthorization()
+      },
+    })
+      .then(data => data.json())
+      .then(res => {
+        document.getElementById("student-count").textContent = res.studentCount ?? "N/A";
+        document.getElementById("course-count").textContent = res.courseCount ?? "N/A";
+        document.getElementById("instructor-count").textContent = res.instructorCount ?? "N/A";
+        document.getElementById("enrollment-count").textContent = res.enrollmentCount ?? "N/A";
+        document.getElementById("popular-course").textContent = res.bestSellerText || "N/A";
+      })
+      .catch(error => {
+        console.error("Error while loading dashboard stats:", error);
+      });
+  }
+
+  function renderCourseChart() {
+
+    const categories = [];
+    const seriesData = [];
+
+    fetch(`${dashboardDB}/coursesPerInstructor`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": getAuthorization()
+      },
+    })
+      .then(data => data.json())
+      .then(res => {
+        const categories = [];
+        const seriesData = [];
+
+        res.forEach(r => {
+          categories.push(r[0]);
+          seriesData.push(r[1]);
+        })
+
+        // Chart config
+        const options = {
+          chart: {
+            type: 'bar',
+            height: 400
+          },
+          series: [{
+            name: 'Courses',
+            data: seriesData
+          }],
+          xaxis: {
+            categories: categories
+          },
+          title: {
+            text: "Courses per Instructor",
+            align: 'center'
+          },
+          colors: ['#18bc9c']
+        };
+
+        const chart = new ApexCharts(document.querySelector("#instructorCourseChart"), options);
+        chart.render();
+      })
+      .catch(error => {
+        console.error("Error while loading dashboard renderCourseChart:" + error);
+      })
+  }
+
+  function renderStudentCourseChart() {
+    fetch(`${courseDB}/studentPerCourse`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": getAuthorization()
+      },
+    }).then(res => res.json())
+      .then((studentPerCourse) => {
+
+        const categories = [];
+        const seriesData = [];
+
+        studentPerCourse.forEach(([title, count]) => {
+          categories.push(title);
+          seriesData.push(count);
+        });
+
+        const options = {
+          chart: {
+            type: 'pie',
+            height: 600,
+            toolbar: {
+              show: true,
+              tools: {
+                download: true
+              }
+            }
+          },
+          series: seriesData,
+          labels: categories,
+          title: {
+            text: "Students per Course",
+            align: 'center'
+          },
+          colors: ['#f39c12', '#e74c3c', '#2ecc71', '#3498db', '#9b59b6', '#1abc9c']
+        };
+
+        const chart = new ApexCharts(document.querySelector("#studentCourseChart"), options);
+        chart.render();
+      });
+  }
+
+  function renderStudentsPerInstructorChart() {
+      fetch(`${dashboardDB}/studentsPerInstructor`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": getAuthorization()
+      },
+    }).then( data => data.json() )
+    .then(res => {
+
+      const categories = [];
+      const seriesData = [];
+
+      res.forEach(r => {
+        categories.push(r[0]);
+        seriesData.push(r[1]);
+      });
+
+      const options = {
+        chart: {
+          type: 'bar',
+          height: 400
+        },
+        series: [{
+          name: 'Students',
+          data: seriesData
+        }],
+        xaxis: {
+          categories: categories,
+          labels: {
+            rotate: -45,
+            style: {
+              fontSize: '12px'
+            }
+          }
+        },
+        title: {
+          text: "Students per Instructor",
+          align: 'center'
+        },
+        colors: ['#3498db']
+      };
+
+      const chart = new ApexCharts(document.querySelector("#studentsPerInstructorChart"), options);
+      chart.render();
+    });
+  }
+
+  loadDashboardStats();
+  renderCourseChart();
+  renderStudentCourseChart();
+  renderStudentsPerInstructorChart();
+</script>

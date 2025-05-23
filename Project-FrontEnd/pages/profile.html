@@ -1,0 +1,107 @@
+<!-- Main Content -->
+<div id="main-content">
+    <!-- breadcrumb -->
+    <ol class="breadcrumb" style="background-color: #ecf0f1;">
+        <li id="home" class="breadcrumb-item"><a href="#" onclick="getHome()">Home</a></li>
+        <li class="breadcrumb-item active">Profile</li>
+    </ol>
+
+    <div class="analytics-panel mt-4 mx-3">
+        <h1><i class="fas fa-user me-2"></i>Profile</h1>
+        <p>Here is your account information.</p>
+    </div>
+
+    <div class="card mx-auto mt-4 p-4 shadow mb-4" style="max-width: 600px; border-radius: 1rem;">
+        <div class="card-body">
+            <h4 class="card-title mb-4 text-primary"><i class="fa fa-id-card me-2"></i>Profile Details</h4>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item"><strong>Name:</strong> <span id="profile-name"></span></li>
+                <li class="list-group-item"><strong>Email:</strong> <span id="profile-email"></span></li>
+                <li class="list-group-item"><strong>Phone:</strong> <span id="profile-phone"></span></li>
+                <li class="list-group-item"><strong>User Type:</strong> <span id="profile-type"></span></li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="coursesEnrolled">
+
+    </div>
+
+</div>
+<script src="js/script.js"></script>
+<script>
+    const userData = JSON.parse(user);
+    // Fill in the profile fields
+    document.getElementById("profile-name").textContent = getUserName() || "-";
+    document.getElementById("profile-email").textContent = getUserType() || "-";
+    document.getElementById("profile-phone").textContent = userData.Phone || "-";
+    document.getElementById("profile-type").textContent = userData.UserType || "-";
+    let coursesEnrolled = document.getElementById("coursesEnrolled");
+
+    if (userData.UserType === "student") {
+        coursesEnrolled.innerHTML = `<div class="analytics-panel mx-3 pb-3">
+            <p>Here are the courses you have enrolled into.</p>
+        </div>`;
+
+        Promise.all([
+            fetch(enrollmentDB).then(res => res.json()),
+            fetch(courseDB).then(res => res.json())
+        ])
+            .then(([enrollments, courses]) => {
+                const studentEnrolled = enrollments.filter(e => e.UserID === userData.id);
+
+                if (studentEnrolled.length > 0) {
+                    // Build complete table HTML structure
+                    let tableHTML = `
+                        <div class="mx-3 pb-3">
+                            <table class="table table-bordered">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Course Title</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="courseTableBody">`;
+
+                    // Add all rows to the table HTML
+                    studentEnrolled.forEach(enrollment => {
+                        const course = courses.find(course => course.id === enrollment.CourseID);
+                        console.log(course);
+                        if (course) {
+                            tableHTML += `
+                                    <tr>
+                                        <td>${course.Title}</td>
+                                        <td>${course.Description}</td>
+                                    </tr>`;
+                        }
+                    });
+
+                    // Close the table HTML
+                    tableHTML += `
+                                </tbody>
+                            </table>
+                        <div>`;
+
+                    // Set the complete table HTML at once
+                    coursesEnrolled.innerHTML += tableHTML;
+                } else {
+                    coursesEnrolled.innerHTML += `<p>You haven't enrolled in any courses yet.</p>`;
+                }
+            })
+    } else {
+        coursesEnrolled.innerHTML += `<p>You haven't enrolled in any courses yet.</p>`;
+    }
+
+    // Home redirection based on user type
+    window.getHome = function () {
+        if (userData.UserType === "student") {
+            window.location.href = "/Project/student.html";
+        } else if (userData.UserType === "admin") {
+            let home = document.getElementById("home");
+            home.addEventListener("click", function (e) {
+                e.preventDefault();
+                loadPage("pages/admin/adminDashboard.html")
+            })
+        }
+    };
+</script>

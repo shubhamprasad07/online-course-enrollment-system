@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Course Enrollement</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="bootstrap\bootstrap.min.css" />
+    <link rel="stylesheet" href="style/style.css" />
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg bg-primary" data-bs-theme="dark">
+        <div class="container-fluid">
+
+            <a class="navbar-brand" href="student.html" style="justify-content: center">
+                <i class="fa-solid fa-book-open" style="justify-content: start"></i>
+                Course Enrollement
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarColor01"
+                aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarColor01">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="student.html">Courses
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"
+                            onclick="loadPage('pages/student/studentInstructorPage.html')">Instructors</a>
+                    </li>
+
+                </ul>
+                <div class="ms-auto dropdown">
+                    <a class="nav-link dropdown-toggle text-white" href="#" data-bs-toggle="dropdown">
+                        <i class="fa fa-user"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#" onclick="loadPage('pages/profile.html')"><i
+                                    class="fa fa-user-circle me-2"></i>Profile</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="logout()"><i
+                                    class="fa fa-sign-out-alt me-2"></i>Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div id="main-content">
+        <!-- breadcrumb -->
+        <ol class="breadcrumb" style="background-color: #ecf0f1;">
+            <li class="breadcrumb-item"><a href="student.html">Home</a></li>
+            <li class="breadcrumb-item active">Courses</li>
+        </ol>
+
+        <div id="welcome-message" class="alert alert-info mt-4 mx-3" role="alert">
+            Welcome, <strong><span id="student-name">Student</span></strong>! Ready to explore some courses?
+        </div>
+
+        <div class="analytics-panel mt-4 mx-3">
+            <h1><i class="fas fa-chart-line me-2"></i>Courses Available</h1>
+            <p>These are courses available.</p>
+        </div>
+
+        <div class="row justify-content-evenly" id="course-list">
+
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="">
+        <footer class="mt-5  bg-primary text-center py-3">
+            <ul class="nav justify-content-center border-bottom pb-3 mb-3 ">
+                <li class="nav-item"><a href="student.html" class="nav-link px-2  text-white">Home</a></li>
+                <li class="nav-item"><a href="#" class="nav-link px-3 text-white"
+                        onclick="loadPage('/Project/pages/faq.html')">FAQs</a></li>
+                <li class="nav-item"><a href="#" class="nav-link px-3 text-white"
+                        onclick="loadPage('/Project/pages/aboutUs.html')">About</a></li>
+                <li class="nav-item"><a href="#" class="nav-link px-3 text-white"
+                        onclick="loadPage('/Project/pages/contact.html')">Contact</a></li>
+            </ul>
+            <p class="text-center text-white">© 2025 Company, Inc</p>
+        </footer>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/script.js"></script>
+    <script>
+
+        // if (user) {
+        //     const userData = JSON.parse(user);
+        //     if (userData.UserType === "admin"){
+        //         alert("Not an Student")
+        //         window.location.href = "/Project/admin.html";
+        //     }
+        // }else {
+        //     alert("No user data found. Redirecting to login.");
+        //     window.location.href = "/Project/login.html";
+        // }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            fetchCourses();
+
+            const userData = JSON.parse(user);
+            if (userData && userData.Name) {
+                document.getElementById("student-name").textContent = userData.Name;
+            }
+
+
+            function fetchCourses() {
+                fetch(courseDB, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": getAuthorization()
+                    }
+                })
+                    .then(res => res.json())
+                    .then(data => renderCourses(data))
+                    .catch(error => console.error('Error fetching courses:', error));
+            }
+
+            function renderCourses(courses) {
+                fetch(instructorDB, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": getAuthorization()
+                    }
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        const courseList = document.getElementById('course-list');
+                        courseList.innerHTML = '';
+
+                        courses.forEach(course => {
+                            let instructor = data.find(i => i.id === course.instructorID);
+                            let instructorName = instructor ? instructor.name : "Unknown";
+                            const card = `
+                            <div class="col-md-3 m-4">
+                                <div class="card effect" style="border-radius: 3%;">
+                                    <div class="card-body">
+                                        <h5 class="card-title" style="color: rgb(255, 102, 0);">${course.title}</h5>
+                                        <p class="card-text">
+                                            <strong>Description:</strong> <span class="text-body-secondary">${course.description}</span>
+                                        </p>
+                                        <p class="card-text" >
+                                            <strong>Instructor:</strong> <span class="text-body-secondary">${instructorName}</span>
+                                        </p>
+                                        <a href="#" class="btn btn-primary courseBtn" data-course-id="${course.courseId}">Enroll</a>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                            courseList.innerHTML += card;
+                        })
+
+                        document.querySelectorAll(".courseBtn").forEach(btn => {
+                            btn.addEventListener("click", function (e) {
+                                e.preventDefault();
+
+                                const today = new Date();
+                                const formatted = today.toISOString().split('T')[0];
+
+                                newEnroll = {
+                                    "UserID": userData.id,
+                                    "CourseID": btn.getAttribute("data-course-id"),
+                                    "EnrollmentDate": formatted
+                                }
+
+                                fetch(enrollmentDB, {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                        "Authorization": getAuthorization()
+                                    },
+                                    body: JSON.stringify(newEnroll)
+                                })
+                                    .then(alert(`${userData.Name} has been enrolled.`))
+                                    .catch(error => console.log(error))
+                            })
+                        })
+                    });
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,214 @@
+<ol class="breadcrumb" style="background-color: #ecf0f1;">
+    <li class="breadcrumb-item"><a href="#" onclick="loadPage('pages/admin/adminDashboard.html')">Dashboard</a></li>
+    <li class="breadcrumb-item active">Instructor</li>
+</ol>
+
+<div class="container mt-4">
+    <h2>Manage Instructors</h2>
+
+    <form id="instructorForm" class="my-3">
+        <fieldset>
+
+            <!-- Name -->
+            <div>
+                <label for="instructorName" class="form-label mt-3">Full Name</label>
+                <input type="text" class="form-control" id="instructorName" placeholder="Enter instructor's full name"
+                    required>
+            </div>
+
+
+            <!-- Expertise -->
+            <div>
+                <label for="instructorExpertise" class="form-label mt-3">Expertise</label>
+                <input type="text" class="form-control" id="instructorExpertise"
+                    placeholder="e.g. Java, ML, Data Science" required>
+            </div>
+
+
+            <!-- Profile Picture -->
+            <div>
+                <label for="instructorPic" class="form-label mt-4">Upload Profile Picture (optional)</label>
+                <input class="form-control" type="file" id="instructorPic">
+            </div>
+
+            <!-- Submit -->
+            <button id="submitBtn" class="btn btn-success mt-4">Add Instructor</button>
+        </fieldset>
+    </form>
+
+
+    <table id="instructorTable" class="table table-hover mt-3">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Expertise</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="instructorTableBody">
+
+        </tbody>
+    </table><br><br>
+</div>
+
+<script>
+    (() => {
+
+        let editInstructorId = null;
+        let instructors = [];
+
+        const instructorForm = document.getElementById("instructorForm");
+        const instructorName = document.getElementById("instructorName");
+        const instructorExpertise = document.getElementById("instructorExpertise");
+        const submitInstructorBtn = document.getElementById("submitBtn");
+        const instructorTableBody = document.getElementById("instructorTableBody");
+
+        submitInstructorBtn.addEventListener("click", function (e) {
+            e.preventDefault();
+
+            const instructor = {
+                "name": instructorName.value,
+                "expertise": instructorExpertise.value
+            };
+
+            if (!instructor.name || !instructor.expertise) return;
+
+            if (editInstructorId) {
+                // Update instructor
+                fetch(`${instructorDB}/${editInstructorId}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json",
+                    "Authorization": getAuthorization() },
+                    body: JSON.stringify(instructor)
+                }).then(() => {
+                    fetchAndRenderInstructors();
+                    clearInstructorForm();
+                    submitInstructorBtn.textContent = "Add Instructor";
+                    editInstructorId = null;
+                });
+            } else {
+                // Add instructor
+                fetch(instructorDB, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": getAuthorization()
+                    },
+                    body: JSON.stringify(instructor)
+                }).then(() => {
+                    fetchAndRenderInstructors();
+                    clearInstructorForm();
+                });
+            }
+        });
+
+        function fetchAndRenderInstructors() {
+            // window.location.reload();
+            fetch(instructorDB, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": getAuthorization()
+                }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    instructors = data;
+                    renderInstructorTable(data);
+                });
+        }
+
+        function renderInstructorTable(data) {
+
+            if ($.fn.DataTable.isDataTable('#instructorTable')) {
+                $('#instructorTable').DataTable().destroy();
+            }
+
+            instructorTableBody.innerHTML = "";
+            data.forEach(instructor => {
+                instructorTableBody.innerHTML += `
+        <tr>
+          <td>${instructor.instructorID}</td>
+          <td>${instructor.name}</td>
+          <td>${instructor.expertise}</td>
+          <td>
+            <button class="btn btn-danger btn-sm delete-btn" data-id="${instructor.instructorID}"><i class="fa-solid fa-trash"></i></button>
+            <button class="btn btn-success btn-sm edit-btn" data-id="${instructor.instructorID}"><i class="fa-regular fa-pen-to-square"></i></button>
+          </td>
+        </tr>
+      `;
+            });
+
+            document.querySelectorAll(".edit-btn").forEach(btn => {
+                btn.addEventListener("click", () => editInstructor(btn.getAttribute("data-id")));
+            });
+
+            document.querySelectorAll(".delete-btn").forEach(btn => {
+                btn.addEventListener("click", () => deleteInstructor(btn.getAttribute("data-id")));
+            });
+
+
+            $('#instructorTable').DataTable({ responsive: true });
+
+        }
+
+        function editInstructor(id) {
+            fetch(`${instructorDB}/${id}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": getAuthorization()
+                }
+            })
+                .then(res => res.json())
+                .then(instructor => {
+                    instructorName.value = instructor.name;
+                    instructorExpertise.value = instructor.expertise;
+                    editInstructorId = id;
+                    submitInstructorBtn.textContent = "Update Instructor";
+                });
+        }
+
+        function deleteInstructor(id) {
+            if (confirm("Are you sure you want to delete this instructor?")) {
+                fetch(`${instructorDB}/${id}`, {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": getAuthorization()
+                    }
+                }).then(() => fetchAndRenderInstructors());
+            }
+        }
+
+        function clearInstructorForm() {
+            instructorForm.reset();
+            instructorName.classList.remove("is-valid", "is-invalid");
+            instructorExpertise.classList.remove("is-valid", "is-invalid");
+        }
+
+        // Optional input validation on blur
+        [instructorName, instructorExpertise].forEach(input => {
+            input.addEventListener("blur", () => {
+                if (input.value.trim().length >= 3) {
+                    input.classList.add("is-valid");
+                    input.classList.remove("is-invalid");
+                } else {
+                    input.classList.add("is-invalid");
+                    input.classList.remove("is-valid");
+                }
+            });
+        });
+
+        fetchAndRenderInstructors();
+    })();
+</script>
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>

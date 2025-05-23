@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        .gradient-custom {
+            /* fallback for old browsers */
+            background: #3280cd;
+
+            /* Chrome 10-25, Safari 5.1-6 */
+            background: -webkit-linear-gradient(to right, #ecf0f1, #3280cd, #3280cd, #ecf0f1);
+
+            /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+            background: linear-gradient(to right, #ecf0f1, #3280cd, #3280cd, #ecf0f1)
+        }
+    </style>
+
+    <!-- MDB CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.0/mdb.min.css" rel="stylesheet" />
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+
+
+    <title>Login</title>
+</head>
+
+<body>
+    <section style="min-height: 100vh; background-color: #ecf0f1;" class="gradient-custom">
+        <div class="container py-5 h-100">
+            <div class="row d-flex justify-content-center align-items-center h-100">
+                <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+                    <div class="card text-white" style="border-radius: 1rem; background-color: #2c3e50;">
+                        <div class="card-body p-5 text-center" id="main-content">
+
+                            <div class="mb-md-5 mt-md-4 pb-5">
+
+                                <h2 class="fw-bold mb-2 text-uppercase">Login</h2>
+                                <p class="text-white-50 mb-5">Please enter your login and password!</p>
+
+                                <div data-mdb-input-init class="form-outline form-white mb-4">
+                                    <input type="email" id="lEmail" class="form-control form-control-lg" />
+                                    <label class="form-label" for="lEmail">Email</label>
+                                    <div class="invalid-feedback ">Invalid Email</div>
+                                </div>
+
+                                <div data-mdb-input-init class="form-outline form-white mb-4">
+                                    <input type="password" id="lPassword" class="form-control form-control-lg" />
+                                    <label class="form-label" for="lPassword">Password</label>
+                                    <div class="invalid-feedback">Minimum 8 characters with at least 1 lowercase letter,
+                                        1 uppercase letter, 1 digit and 1 special character</div>
+                                </div>
+
+                                <button data-mdb-button-init data-mdb-ripple-init
+                                    class="btn btn-outline-light btn-lg px-5 " id="login">Login</button>
+
+                            </div>
+
+                            <div>
+                                <p class="mb-0">Don't have an account? <a href="pages/register.html"
+                                        class="text-white-50 fw-bold">Sign
+                                        Up</a>
+                                </p>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- MDB JS -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.0/mdb.min.js"></script>
+    <!-- <script>
+
+        let user = localStorage.getItem("user");
+        if (user) {
+            let userType = JSON.parse(user).UserType;
+            if (userType === "student") {
+                window.location.href = "/Project/student.html";
+            } else if (userType === "admin") {
+                window.location.href = "/Project/admin.html";
+            }
+        }
+
+        let lEmail = document.getElementById("lEmail");
+        let lPassword = document.getElementById("lPassword");
+        let loginBtn = document.getElementById("login");
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+
+        const userDB = "http://localhost:8080/users";
+
+        // Validation Functions
+        function validateLoginEmail() {
+            if (emailRegex.test(lEmail.value)) {
+                lEmail.classList.add("is-valid");
+                lEmail.classList.remove("is-invalid");
+                return true;
+            } else {
+                lEmail.classList.add("is-invalid");
+                lEmail.classList.remove("is-valid");
+                return false;
+            }
+        }
+
+        function validateLoginPassword() {
+            if (passwordRegex.test(lPassword.value)) {
+                lPassword.classList.add("is-valid");
+                lPassword.classList.remove("is-invalid");
+                return true;
+            } else {
+                lPassword.classList.add("is-invalid");
+                lPassword.classList.remove("is-valid");
+                return false;
+            }
+        }
+
+        if (lEmail) lEmail.addEventListener("blur", validateLoginEmail);
+        if (lPassword) lPassword.addEventListener("blur", validateLoginPassword);
+
+        if (loginBtn) {
+            loginBtn.addEventListener("click", function (e) {
+                e.preventDefault();
+                verifyLogin();
+            });
+        }
+
+        function verifyLogin() {
+            const isEmailValid = validateLoginEmail();
+            const isPasswordValid = validateLoginPassword();
+
+            if (isEmailValid && isPasswordValid) {
+                fetch(userDB)
+                    .then(res => res.json())
+                    .then(data => {
+                        const user = data.find(d => d.Email === lEmail.value && d.Password === lPassword.value);
+
+                        if (user) {
+                            localStorage.setItem("user", JSON.stringify(user));
+                            if (user.UserType === "student") {
+                                window.location.href = "/Project/student.html";
+                            } else if (user.UserType === "admin") {
+                                window.location.href = "/Project/admin.html";
+                            }
+                        } else {
+                            alert("Invalid email or password.");
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error fetching user data:", error);
+                        alert("Something went wrong. Please try again later.");
+                    });
+            }
+        }
+    </script> -->
+  <script src="js/script.js"></script>
+  <script src="js/login2.js"></script>
+
+</body>
+
+</html>
